@@ -1,0 +1,190 @@
+﻿﻿@model _4ChanCrawler.Models.Viewmodels.IndexViewModel
+@{ 
+    ViewBag.Title = Model.CurrentCategory.Name;
+
+
+}
+@*-----------------------------PAGENATION-------------------*@
+@*<div class="col-md-12 text-center">
+        <ul class="pagination">
+            @for (int i = 1; i < Model.TotalPages + 1; i++)
+                {
+                <li class="@(i -1 == Model.CurrentPage ? "active" : "")">
+                    <a href="@Url.Action("Index",new { Id=Model.CurrentCategory.Id, PageNumber = i -1 })">@i</a>
+                </li>
+            }
+        </ul>
+    </div>*@
+
+<div class="grid">
+    
+    <h2 class="bold text-center text-capitalize" id="headerText">
+        @Model.CurrentCategory.Name 
+        <span id="MD5">
+
+             </span>
+        <br />
+        
+        @*Random order <input type="checkbox" id="GetRandom" />*@
+    </h2>
+    <div id="MediaContent" class="well" align="center">
+        <div class="embed-responsive embed-responsive-16by9" id="MediaContainer">
+            <img src="" id="Element" class="img-responsive Element" />
+            <video controls preload="none" class="embed-responsive-item Element" width="800" id="Element" onvolumechange="SaveVolumeLevel(this)">
+                <source src="" type="video/webm">
+            </video>
+            
+        </div>
+        @if (Request.IsAuthenticated)
+            {
+            <a href="@Url.Action("GetElements", new { id = Model.CurrentCategory.Id })">Update</a>
+
+            <div id="ButtonHolder">
+
+                <div type="button" class="btn btn-default btn-lg" onclick="RatePost(0)" id="Dislike">
+                    <span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span> Fuck this shit
+                    <b></b>
+                </div>
+                <div type="button" class="btn btn-default btn-lg" onclick="RatePost(10)" id="Like">
+                    <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span>This is nice
+                    <b></b>
+                </div>
+                <div type="button" class="btn btn-default btn-lg" onclick="RatePost(20)" id="Favorite">
+                    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> <b>This shit is dope</b>
+                </div>
+            </div>
+
+        }
+    </div>
+
+
+
+
+
+
+</div>
+@section scripts {
+    <script>
+        var Skip = 0;
+        var PostId = 0;
+        var NSFW = @Json.Encode(Model.IsNSFW)
+        var CurrentCatId = @(Model.CurrentCategory.Id);
+        var IsFavorite = @Json.Encode(Model.IsFavorite)
+        $(document).ready(function () {
+            LoadVolumeLevel()
+            var myElement = document.getElementById('Swagger');
+
+            var Content = document.getElementById('MediaContent');
+            // create a simple instance
+            // by default, it only adds horizontal recognizers
+            var mc = new Hammer(myElement);
+            var m2 = new Hammer(Content);
+            // listen to events...
+            mc.on("swipeleft", function (ev) {
+                GetPost(1)
+            });
+            mc.on("swiperight", function (ev) {
+                GetPost(2)
+            });
+            m2.on("swipeup", function (ev) {
+                RatePost(20)
+            });
+
+            GetPost()
+            $('video').on('ended', function () {
+                GetPost(1)
+            });
+
+            //$("body").on("swipeleft", function () {
+            //    GetPost(2)
+            //});
+            //$("body").on("swiperight", function () {
+            //    GetPost(1)
+            //});
+        });
+        function RatePost(Rating) {
+            RemoveColorOnButtons()
+            ColorButton(Rating)
+             $.ajax({
+                type: "POST",
+                url: "@Url.Action("RatePost", "Home")",
+                data: { Id: PostId, Relation: Rating },
+                success: function () {
+                }
+            });
+        }
+        function DeleteElement() {
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("DeleteVideo", "Home")",
+                data: { Id: PostId},
+                success: function (Result) {
+                    GetPost()
+
+                }
+            })
+        }
+        function GetPost(Bla) {
+            var random = $("#GetRandom").prop("checked");
+            $("video")[0].pause()
+            if (Bla == 1) {
+                Skip++ //Next post
+            } else if (Bla == 2) {
+                Skip-- //Last Post
+            }
+            $.ajax({
+                type: "GET",
+                contentType: "application/json",
+                dataType: "json",
+                url: "@Url.Action("GetPostNew", "Home")",
+                data: { CategoryID: CurrentCatId, SkipAmount: Skip},
+                success: function (result) {
+                    RemoveColorOnButtons()
+                    //SetRating(result.Likes, result.Dislikes)
+                    //if (result.Reset == true) {
+                    //    Skip = 0
+                    //}
+                    //if (result.Rating != null) {
+                    //    ColorButton(result.Rating)
+                    //}
+                    PostId = result.PostId
+                    
+
+                    if (result.FileUrl.search("webm") != -1) { //if its a video
+                        $($("img")[0]).attr("class", "hide")
+                        $($("video")[0]).attr("class", "")
+                        $($("video")[0]).children()[0].src = result.FileUrl
+                        $("#MediaContainer").attr("class","embed-responsive embed-responsive-16by9")
+                        $("video")[0].load();
+                        $("video")[0].play();
+                    }
+                    else {
+                        $("#MediaContainer").attr("class", "")
+
+                        $("video")[0].pause();
+                        $($("img")[0]).attr("class", "img-responsive")
+                        $($("video")[0]).attr("class", "hide")
+                        $($("img")[0]).attr("src", result.FileUrl)
+                        //setTimeout(
+                        //    function () {
+                        //        if (result.ViewElement.Id == PostId) {
+                        //            GetPost(1)
+                        //        }
+                        //    }, 6000);
+                    }
+
+                }
+            });
+            @*var jqxhr = $.ajax("@Url.Action("GetRandomPost", "Home",new {Id = Model.CurrentCategory.Id })",
+                data: { Id: 1, SkipAmount: 1 })
+
+                .done(function (Data) {
+                    $("#Element").attr("src", Data.FileURL)
+                })
+                .always(function () {
+                    alert("complete");
+                });*@
+
+        }
+    </script>
+}

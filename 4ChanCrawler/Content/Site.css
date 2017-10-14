@@ -1,0 +1,91 @@
+﻿body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+}
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Override the default bootstrap behavior where horizontal description lists 
+   will truncate terms that are too long to fit in the left column 
+*/
+.dl-horizontal dt {
+    white-space: normal;
+}
+
+.scrollable-menu {
+    height: auto;
+    max-height: 200px;
+    overflow-x: hidden;
+}
+/* Set width on the form input elements since they're 100% wide by default */
+input,
+select,
+textarea {
+    max-width: 280px;
+}
+
+
+.affix {
+    top: 70px !important;
+}
+
+li.active a {
+    color: white !important;
+}
+#MediaContainer #Element {
+    max-height: 70vh;
+}
+.grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-areas: "header" "media";
+    grid-column-gap: 2em;
+}
+.catGrid {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    grid-gap: 1em;
+    grid-auto-rows: 10em;
+}
+    .catGrid > div {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        grid-template-areas: "text" "picture";
+        display: grid;
+        justify-content: center;
+        border-radius: 10px;
+        background-color: rgba(198, 9, 9, 0.81);
+    }
+    .catGrid div > div {
+        background: url("https://media3.giphy.com/media/3oQT9saxjFxWE/200_s.gif"), no-repeat;
+        background: -webkit-radial-gradient(top center, ellipse cover, rgba(255,255,255,0.0) 100%,rgba(0,0,0,0.5) 0%), url('https://media3.giphy.com/media/3oQT9saxjFxWE/200_s.gif') repeat;
+        border-radius: 0 0px 5px 5px;
+        background-size: cover;
+        grid-area: picture;
+    }
+        .catGrid div a {
+
+            grid-area: text;
+        }
+
+
+#MediaContent {
+    grid-area: media;
+}
+
+#headerText {
+    grid-area: header;
+}
+
+
+#ButtonHolder{
+    position:fixed;
+    bottom:0;
+    left:0;
+    width:100%;
+    background:rgb(0, 255, 255)
+}

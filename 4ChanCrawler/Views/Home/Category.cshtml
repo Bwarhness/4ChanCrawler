@@ -1,0 +1,47 @@
+﻿@model List<_4ChanCrawler.Models.Viewmodels.CategoryViewModel>
+@{
+    ViewBag.Title = "Category";
+}
+
+<h2>Category</h2>
+<h3>How to: Select categori, and then use the arrows to skip videos, or go back.</h3>
+<hr />
+<div class="catGrid">
+    @foreach (var Cat in Model.Where(p => p.IsNSFW == false))
+    {
+        if (Cat.ElementCount == 0)
+        {
+            <div>
+
+                <a href="#" class="text-center h5" style="color:white;">@Cat.Name: No videos, try again tomorrow. :(</a>
+                <div></div>
+            </div>
+        }
+        else
+        {
+            <div>
+
+                <a href="@Url.Action("Index",new { Id = Cat.CatId })" class="text-center h5" style="color:white;">@Cat.Name - @Cat.ElementCount</a>
+                <div></div>
+            </div>
+        }
+
+    }
+</div>
+<h2>NSFW</h2>
+<div class="catGrid">
+    @foreach (var Cat in Model.Where(p => p.IsNSFW == true))
+            {
+        <div>
+            
+            <span class="text-center">
+
+                <a href="@Url.Action("Index",new { Id = Cat.CatId, isNSFW = true })" class="text-center h5" style="color:white;">@Cat.Name</a> <a href="@Url.Action("CreateCat",new {id = Cat.CatId})" class="pull-right"><span class="glyphicon glyphicon-cog"></span></a>
+            </span>
+
+            <div></div>
+        </div>
+    }
+</div>
+
+

@@ -1,0 +1,112 @@
+﻿﻿@model _4ChanCrawler.Models.Viewmodels.IndexViewModel
+<div class="page-header text-center">
+    <h1 class="">
+        @Model.CurrentCategory.Name
+
+    </h1>
+    <small>@Model.CurrentCategory.BoardsArray - @Model.CurrentCategory.SearchParams</small>
+    @if (Request.IsAuthenticated)
+    {
+        <a href="@Url.Action("GetElements", new { CatId = Model.CurrentCategory.Id })" class="btn btn-default">Opdate list</a>
+
+    }
+</div>
+@*-----------------------------PAGENATION-------------------*@
+@*<div class="col-md-12 text-center">
+    <ul class="pagination">
+        @for (int i = 1; i < Model.TotalPages + 1; i++)
+            {
+            <li class="@(i -1 == Model.CurrentPage ? "active" : "")">
+                <a href="@Url.Action("Index",new { Id=Model.CurrentCategory.Id, PageNumber = i -1 })">@i</a>
+            </li>
+        }
+    </ul>
+</div>*@
+
+
+<div class="row">
+
+    <div class="col-md-4" id="myScrollspy" style="padding-right:0">
+        <div class="panel panel-default" data-spy="affix" data-offset-top="105" data-offset-bottom="" style="min-width:33.3333%">
+            <div class="panel-heading">
+                <h2 class="panel-title">Kategorier</h2>
+            </div>
+            <div class="panel-body">
+                <ul class="list-group">
+
+                    @foreach (var Cat in Model.AllCategories)
+                    {
+                        <li class="list-group-item @(Model.CurrentCategory.Id == Cat.Id ? "active" : "")">
+
+                            <a href="@Url.Action("Index",new { Id = Cat.Id })">@Cat.Name</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+
+    </div>
+    <div class="col-md-6 col-md-offset-1">
+        @if (Model.CurrentCategory.ViewElements != null)
+        {
+
+            var item = Model.CurrentCategory.ViewElements.FirstOrDefault();
+                <div class="row well" align="center">
+
+
+                        @if (item.FileType == _4ChanCrawler.Models.Database.FileType.WebM)
+                        {
+                            <div class="col-md-12 embed-responsive embed-responsive-16by9">
+                                <video controls preload="metadata" class="embed-responsive-item" width="800" id="Element">
+                                    <source src="~/Content/Files/@item.FileURL" type="video/webm">
+                                </video>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="col-md-12">
+                                <img src="~/Content/Files/@item.FileURL" id="Element" class="img-responsive" style="min-width:800px"/>
+
+                            </div>
+                                }
+
+                            </div>
+
+
+
+                <hr />
+
+
+
+            
+        }
+
+    </div>
+</div>
+@section scripts {
+    <script>
+        var Skip = 0;
+        
+        function GetNextPost() {
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetNextPost", "Home")",
+                data: { Id: @Model.CurrentCategory.Id, SkipAmount: Skip },
+                success: function (result) {
+                    Skip = result.SkipAmount;
+                    $("#Element").attr("src", result.ViewElement.FileURL)
+                }
+            });
+            @*var jqxhr = $.ajax("@Url.Action("GetRandomPost", "Home",new {Id = Model.CurrentCategory.Id })",
+                data: { Id: 1, SkipAmount: 1 })
+
+                .done(function (Data) {
+                    $("#Element").attr("src", Data.FileURL)
+                })
+                .always(function () {
+                    alert("complete");
+                });*@
+
+        }
+    </script>
+}
