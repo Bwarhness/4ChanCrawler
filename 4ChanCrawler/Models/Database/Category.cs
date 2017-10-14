@@ -38,24 +38,30 @@ namespace _4ChanCrawler.Models.Database
 
                     string json = client.DownloadString("http://a.4cdn.org/" + board.ToLower() + "/catalog.json");
 
-                    List<KeyValuePair<string, List<JToken>>> MatchingThreads = new List<KeyValuePair<string, List<JToken>>>();
+                    List<JToken> MatchingThreads = new List<JToken>();
                     JArray Content = JArray.Parse(json);
                     for (int i = 0; i < Content.Count; i++)
                     {
                         JObject CurrentPage = (JObject)Content[i];
-                        List<string> searchParams = SearchParams.Split(';').ToList(); //Her indtaster vi de ønskede threads vi vil finde. Den søger i teksten og ser om den container det vi indtaster, f.eks "YLYL"
+                        List<string> searchParams = SearchParams.Split(';').Where(p => string.IsNullOrEmpty(p) == false).ToList(); //Her indtaster vi de ønskede threads vi vil finde. Den søger i teksten og ser om den container det vi indtaster, f.eks "YLYL"
 
-                        var Threads = searchParams.Select(b => new KeyValuePair<string, List<JToken>>(b, CurrentPage.SelectToken("threads").Where(x => x.SelectToken("com") != null || x.SelectToken("sub") != null).Where(p => (p.SelectToken("com") != null && p.SelectToken("com").ToString().ToLower().Contains(b.ToLower())) || (p.SelectToken("sub") != null && p.SelectToken("sub").ToString().ToLower().Contains(b.ToLower()))).ToList())).ToList();
-
-                        MatchingThreads.AddRange(Threads);
-                    }
-                    foreach (var Category in MatchingThreads) //We use cat for storing in folders in the future
-                    {
-                        foreach (var item in Category.Value)
+                        foreach (var param in searchParams)
                         {
+                            var bla = CurrentPage.SelectToken("threads")
+                            .Where(x => x.SelectToken("com") != null || x.SelectToken("sub") != null)
+                            .Where(p => (p.SelectToken("com") != null && p.SelectToken("com").ToString().ToLower().Contains(param.ToLower()))
+                            || (p.SelectToken("sub") != null && p.SelectToken("sub").ToString().ToLower().Contains(param.ToLower()))).ToList();
+
+                            MatchingThreads.AddRange(bla);
+                        };
+                        
+
+                    }
+                    foreach (var item in MatchingThreads) //We use cat for storing in folders in the future
+                    {
                             string downloadUrl = "";
                             string baseurl = "http://i.4cdn.org/" + board.ToLower() + "/";
-                            if ((int)item.SelectToken("replies") > 10)
+                            if ((int)item.SelectToken("replies") > 1)
                             {
                                 string thread = client.DownloadString("http://a.4cdn.org/" + board.ToLower() + "/thread/" + item.SelectToken("no").ToString() + ".json");
                                 var JThread = JObject.Parse(thread);
@@ -65,7 +71,7 @@ namespace _4ChanCrawler.Models.Database
                                     if (((Reply.SelectToken("ext").ToString().ToLower() != ".webm" && AcceptPics == true) || (Reply.SelectToken("ext").ToString().ToLower() == ".webm" && AcceptVids == true)))
                                     {
                                         var md5 = Reply.SelectToken("md5").ToString();
-                                        if ((!db.ViewElements.Where(p => p.MD5.ToLower() == md5.ToLower() && p.Fk_Category == this.Id).Any()) || !ElementsToSave.Where(p => p.MD5.ToLower() == md5.ToLower()).Any())
+                                        if ((!db.ViewElements.Where(p => p.MD5.ToLower() == md5.ToLower() && p.Fk_Category == this.Id).Any()) && !ElementsToSave.Where(p => p.MD5.ToLower() == md5.ToLower()).Any())
                                         {//Check if file is existing, and continues if it doesnt.
 
                                             var IsVideo = Reply.SelectToken("ext").ToString().ToLower() == ".webm";
@@ -106,7 +112,7 @@ namespace _4ChanCrawler.Models.Database
 
                                 }
                             }
-                        }
+                        
 
                         //JArray replies = item.SelectToken
                     }

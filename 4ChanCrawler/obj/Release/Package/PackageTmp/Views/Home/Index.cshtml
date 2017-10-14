@@ -20,13 +20,18 @@
     
     <h2 class="bold text-center text-capitalize" id="headerText">
         @Model.CurrentCategory.Name 
+        <select id="Order">
+            <option value="0">Newest</option>
+            <option value="1">Ranked</option>
+            <option value="2">Random</option>
+
+        </select>
         <span id="MD5">
 
              </span>
         <br />
         
         @*Random order <input type="checkbox" id="GetRandom" />*@
-        <a href="@Url.Action("GetElements", new { id = Model.CurrentCategory.Id })">Update</a>
     </h2>
     <div id="MediaContent" class="well" align="center">
         <div class="embed-responsive embed-responsive-16by9" id="MediaContainer">
@@ -38,6 +43,8 @@
         </div>
         @if (Request.IsAuthenticated)
             {
+            <a href="@Url.Action("GetElements", new { id = Model.CurrentCategory.Id })">Update</a>
+
             <div id="ButtonHolder">
 
                 <div type="button" class="btn btn-default btn-lg" onclick="RatePost(0)" id="Dislike">
@@ -124,6 +131,7 @@
             })
         }
         function GetPost(Bla) {
+            var order = $("#Order").val();
             var random = $("#GetRandom").prop("checked");
             $("video")[0].pause()
             if (Bla == 1) {
@@ -136,7 +144,7 @@
                 contentType: "application/json",
                 dataType: "json",
                 url: "@Url.Action("GetPostNew", "Home")",
-                data: { CategoryID: CurrentCatId, SkipAmount: Skip},
+                data: { CategoryID: CurrentCatId, SkipAmount: Skip, order: order },
                 success: function (result) {
                     RemoveColorOnButtons()
                     //SetRating(result.Likes, result.Dislikes)

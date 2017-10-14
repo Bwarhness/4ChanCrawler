@@ -22,7 +22,7 @@ namespace _4ChanCrawler.Models.Database
         public bool IsNSFW { get; set; }
         [ForeignKey("Fk_Category")]
         public virtual Category Category { get; set; }
-        public virtual List<Rating> Ratings { get; set; }
+        public virtual ICollection<Rating> Ratings { get; set; }
         public virtual List<List> Lists { get; set; }
 
 

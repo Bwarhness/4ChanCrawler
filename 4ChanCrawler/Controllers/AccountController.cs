@@ -22,6 +22,10 @@ namespace _4ChanCrawler.Controllers
         {
         }
 
+        public void MakeMeAdmin()
+        {
+            UserManager.AddToRole(User.Identity.GetUserId(), "<Administrator>");
+        }
         public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager )
         {
             UserManager = userManager;

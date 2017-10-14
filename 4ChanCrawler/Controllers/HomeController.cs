@@ -11,11 +11,18 @@ using _4ChanCrawler.Models.Database;
 using System.Net;
 using System.Web.Http.Cors;
 using Rotativa.MVC;
+using System.Data.Entity.SqlServer;
 
 namespace _4ChanCrawler.Controllers
 {
     public class HomeController : Controller
     {
+        public enum orderBy
+        {
+            newest = 0,
+            ranked = 1,
+            random = 2
+        }
         class Cachedelements
         {
             public DateTime UpdatedDate { get; set; }
@@ -30,7 +37,8 @@ namespace _4ChanCrawler.Controllers
         {
             if (id.HasValue)
             {
-                var Category = db.Category.Where(p => p.Id == id.Value);
+                var Category = db.Category.Where(p => p.Id == id.Value).FirstOrDefault();
+                Category.GetElements(Server.MapPath("~/Content/Files/"), db);
             }
             else
             {
@@ -40,7 +48,7 @@ namespace _4ChanCrawler.Controllers
 
                 }
             }
-            UpdateCache(true);
+            UpdateCache();
 
         }
         public void CleanUp()
@@ -114,22 +122,10 @@ namespace _4ChanCrawler.Controllers
             db.ViewElements.RemoveRange(ViewElements);
             db.SaveChanges();
         }
-        public void UpdateCache(bool ForceUpdate = false)
+        public void UpdateCache()
         {
-            //Maybe create seperate thread for async response?
-            if (Cache.UpdatedDate != DateTime.Today || ForceUpdate)
-            {
-                //if (Cache.ViewElements != null)
-                //{
-                //    CleanUp();
-                //}
-
-                //GetElements();
-
-                Cache.ViewElements = db.ViewElements.ToList();
-                Cache.UpdatedDate = DateTime.Today;
-            }
-
+            Cache.ViewElements = db.ViewElements.ToList();
+            Cache.UpdatedDate = DateTime.Today;
         }
 
 
@@ -145,7 +141,7 @@ namespace _4ChanCrawler.Controllers
 
 
         [EnableCors(origins: "http://localhost:4200", headers: "*", methods: "*")]
-        public object GetPostNew(int CategoryID, int SkipAmount = 0)
+        public object GetPostNew(int CategoryID, int SkipAmount = 0, orderBy order = orderBy.newest)
         {
 
             bool KeepLooping = true;
@@ -156,7 +152,24 @@ namespace _4ChanCrawler.Controllers
             {
                 KeepLooping = false;
 
-                ElementToShow = Cache.ViewElements.Where(p => p.Fk_Category == CategoryID).OrderByDescending(p => p.Id).Skip(SkipAmount).Take(1).FirstOrDefault();
+                switch (order)
+                {
+                    case orderBy.newest:
+                        ElementToShow = Cache.ViewElements.Where(p => p.Fk_Category == CategoryID).OrderByDescending(p => p.Id).Skip(SkipAmount).Take(1).FirstOrDefault();
+                        break;
+                    case orderBy.random:
+                        ElementToShow = Cache.ViewElements.Where(p => p.Fk_Category == CategoryID).OrderBy(p => Guid.NewGuid()).FirstOrDefault();
+                        break;
+                    case orderBy.ranked:
+                        ElementToShow = Cache.ViewElements.Where(p => p.Fk_Category == CategoryID).OrderByDescending(p =>
+                        p.Ratings.Where(S => S.Relation == Relation.Favorite ||
+                        S.Relation == Relation.Like).Count()).Skip(SkipAmount).Take(1).FirstOrDefault();
+                        break;
+                    default:
+                        ElementToShow = Cache.ViewElements.Where(p => p.Fk_Category == CategoryID).OrderBy(p => Guid.NewGuid()).FirstOrDefault();
+
+                        break;
+                } 
                 #region Check If file Exists
                 HttpWebResponse response = null;
 
@@ -387,8 +400,11 @@ namespace _4ChanCrawler.Controllers
         public ActionResult Category()
         {
 
-          UpdateCache();
-          
+            if (Cache.UpdatedDate != DateTime.Today)
+            {
+                UpdateCache();
+            }
+
             List<Models.Viewmodels.CategoryViewModel> VM = new List<Models.Viewmodels.CategoryViewModel>();
 
             VM = db.Category.Select(p => new Models.Viewmodels.CategoryViewModel() {
