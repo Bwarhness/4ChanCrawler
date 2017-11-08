@@ -52,7 +52,11 @@ namespace _4ChanCrawler.Models.Database
                             .Where(p => (p.SelectToken("com") != null && p.SelectToken("com").ToString().ToLower().Contains(param.ToLower()))
                             || (p.SelectToken("sub") != null && p.SelectToken("sub").ToString().ToLower().Contains(param.ToLower()))).ToList();
 
-                            MatchingThreads.AddRange(bla);
+                            if (MatchingThreads.Where(p => p.ToString() == bla.ToString()).Any() == false)
+                            {
+                                MatchingThreads.AddRange(bla);
+
+                            }
                         };
                         
 

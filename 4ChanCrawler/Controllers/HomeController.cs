@@ -51,6 +51,10 @@ namespace _4ChanCrawler.Controllers
             UpdateCache();
 
         }
+        public List<Category> APIGetElements()
+        {
+            return db.Category.ToList();
+        }
         public void CleanUp()
         {
             List<ViewElement> Elements = new List<ViewElement>();
@@ -150,6 +154,8 @@ namespace _4ChanCrawler.Controllers
             ViewElement ElementToShow = new ViewElement();
             while (KeepLooping)
             {
+
+                SkipAmount = SkipAmount > Cache.ViewElements.Where(p => p.Fk_Category == CategoryID).Count() ? 0 : SkipAmount;
                 KeepLooping = false;
 
                 switch (order)
